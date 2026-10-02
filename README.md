@@ -11,9 +11,11 @@ Jellyfin plugin (server 12.1) that replaces movie chapters with emoji markers fr
 
 ## Release
 
-In GitHub, open **Actions > Release > Run workflow** and enter a version like `0.1.0`.
-It runs the tests, builds the plugin and creates release `v0.1.0` with
-`cinemarker_0.1.0.0.zip` and `manifest.json` attached.
+In GitHub, open **Actions > Release > Run workflow**. Leave the version empty to bump the
+last release by one patch (`0.1.0` to `0.1.1`; the first release is `0.1.0`), or type a
+version like `0.2.0` for a bigger change. The changelog defaults to "Bug fixes and
+improvements." It runs the tests, builds the plugin and creates the release with
+`cinemarker_X.Y.Z.0.zip` and `manifest.json` attached.
 
 ## What it does
 
