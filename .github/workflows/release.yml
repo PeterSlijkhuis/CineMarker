@@ -1,0 +1,62 @@
+# Publish a GitHub release named vX.Y.Z and this builds the plugin, attaches
+# cinemarker_X.Y.Z.0.zip and manifest.json to it. Jellyfin reads the manifest from
+# https://github.com/PeterSlijkhuis/CineMarker/releases/latest/download/manifest.json
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      CHANGELOG: ${{ github.event.release.body }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test tests/Jellyfin.Plugin.CineMarker.Tests
+
+      - name: Build zip and manifest
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag must look like v1.2.3, got $TAG"; exit 1; }
+          VERSION="${TAG#v}.0"
+          dotnet build src/Jellyfin.Plugin.CineMarker -c Release -o out -p:AssemblyVersion=$VERSION -p:FileVersion=$VERSION
+          ZIP="cinemarker_$VERSION.zip"
+          zip -j "$ZIP" out/Jellyfin.Plugin.CineMarker.dll
+          jq -n \
+            --arg version "$VERSION" \
+            --arg changelog "${CHANGELOG:-Release $TAG}" \
+            --arg url "https://github.com/${{ github.repository }}/releases/download/$TAG/$ZIP" \
+            --arg checksum "$(md5sum "$ZIP" | cut -d' ' -f1)" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '[{
+              guid: "81dd951c-751d-4736-b6a7-aa848a4cd741",
+              name: "CineMarker",
+              description: "Replaces movie chapters with emoji markers from CineMarkerDB.",
+              overview: "Emoji chapter markers for movies",
+              owner: "PeterSlijkhuis",
+              category: "Metadata",
+              versions: [{
+                version: $version,
+                changelog: $changelog,
+                targetAbi: "12.1.0.0",
+                sourceUrl: $url,
+                checksum: $checksum,
+                timestamp: $timestamp
+              }]
+            }]' > manifest.json
+          cat manifest.json
+
+      - name: Attach to release
+        run: gh release upload "$TAG" cinemarker_*.zip manifest.json --clobber
