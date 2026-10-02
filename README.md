@@ -3,6 +3,17 @@
 Jellyfin plugin (server 12.1) that replaces movie chapters with emoji markers from
 [CineMarkerDB](https://github.com/PeterSlijkhuis/CineMarkerDB).
 
+## Install
+
+1. In Jellyfin, open **Dashboard > Plugins > Repositories** and add
+   `https://github.com/PeterSlijkhuis/CineMarker/releases/latest/download/manifest.json`
+2. Install **CineMarker** from the catalog and restart Jellyfin.
+
+## Release
+
+Publish a GitHub release with a tag like `v0.1.0`. The release workflow runs the tests,
+builds the plugin and attaches `cinemarker_0.1.0.0.zip` and `manifest.json` to it.
+
 ## What it does
 
 Two tasks appear under **Dashboard > Scheduled Tasks > CineMarker**:
